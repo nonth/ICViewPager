@@ -99,6 +99,7 @@ You can change ViewPager's options via `viewPager:valueForOption:withDefault:` d
             return color;
     }
 }
+```
 
 All delegate methods are optional.
 
@@ -109,9 +110,9 @@ All delegate methods are optional.
     // Do something useful
 }
 ```
+
 ViewPager will alert your delegate object via `- viewPager:didChangeTabToIndex:` method, so that you can do something useful.
 
-```
 You can change some colors too. Just like options, return the interested component's color, and leave out all the rest! [Link](http://www.youtube.com/watch?v=LBTXNPZPfbE)
     
 ### Options
