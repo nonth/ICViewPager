@@ -17,10 +17,13 @@
 #define kTabOffset 56.0
 #define kTabWidth 128.0
 #define kTabLocation 1.0
+#define kTabIndicatorLocation 1.0
+#define kTabAlignmentCenter 0.0
 #define kStartFromSecondTab 0.0
 #define kCenterCurrentTab 0.0
 #define kFixFormerTabsPositions 0.0
 #define kFixLatterTabsPositions 0.0
+#define kEnableSwipeContentView 1.0
 
 #define kIndicatorColor [UIColor colorWithRed:178.0/255.0 green:203.0/255.0 blue:57.0/255.0 alpha:0.75]
 #define kTabsViewBackgroundColor [UIColor colorWithRed:234.0/255.0 green:234.0/255.0 blue:234.0/255.0 alpha:0.75]
@@ -28,7 +31,9 @@
 
 #pragma mark - UIColor+Equality
 @interface UIColor (Equality)
+
 - (BOOL)isEqualToColor:(UIColor *)otherColor;
+
 @end
 
 @implementation UIColor (Equality)
@@ -59,9 +64,17 @@
 #pragma mark - TabView
 @class TabView;
 
+typedef NS_ENUM(NSUInteger, TabViewIndicatorLocation) {
+    TabViewIndicatorLocationTop,
+    TabViewIndicatorLocationBottom
+};
+
 @interface TabView : UIView
+
 @property (nonatomic, getter = isSelected) BOOL selected;
 @property (nonatomic) UIColor *indicatorColor;
+@property (nonatomic) TabViewIndicatorLocation indicatorLocation;
+
 @end
 
 @implementation TabView
@@ -69,6 +82,7 @@
     self = [super initWithFrame:frame];
     if (self) {
         self.backgroundColor = [UIColor clearColor];
+        self.indicatorLocation = TabViewIndicatorLocationTop;
     }
     return self;
 }
@@ -102,9 +116,11 @@
         
         bezierPath = [UIBezierPath bezierPath];
         
+        CGFloat yPosition = (self.indicatorLocation == TabViewIndicatorLocationTop) ? 0.0f : CGRectGetHeight(rect) - 1.0f;
+        
         // Draw the indicator
-        [bezierPath moveToPoint:CGPointMake(0.0, CGRectGetHeight(rect) - 1.0)];
-        [bezierPath addLineToPoint:CGPointMake(CGRectGetWidth(rect), CGRectGetHeight(rect) - 1.0)];
+        [bezierPath moveToPoint:CGPointMake(0.0, yPosition)];
+        [bezierPath addLineToPoint:CGPointMake(CGRectGetWidth(rect), yPosition)];
         [bezierPath setLineWidth:5.0];
         [self.indicatorColor setStroke];
         [bezierPath stroke];
@@ -131,10 +147,13 @@
 @property (nonatomic) NSNumber *tabOffset;
 @property (nonatomic) NSNumber *tabWidth;
 @property (nonatomic) NSNumber *tabLocation;
+@property (nonatomic) NSNumber *tabIndicatorLocation;
+@property (nonatomic) NSNumber *tabAlignmentCenter;
 @property (nonatomic) NSNumber *startFromSecondTab;
 @property (nonatomic) NSNumber *centerCurrentTab;
 @property (nonatomic) NSNumber *fixFormerTabsPositions;
 @property (nonatomic) NSNumber *fixLatterTabsPositions;
+@property (nonatomic) NSNumber *enableSwipeContentView;
 
 @property (nonatomic) NSUInteger tabCount;
 @property (nonatomic) NSUInteger activeTabIndex;
@@ -156,10 +175,13 @@
 @synthesize tabOffset = _tabOffset;
 @synthesize tabWidth = _tabWidth;
 @synthesize tabLocation = _tabLocation;
+@synthesize tabIndicatorLocation = _tabIndicatorLocation;
+@synthesize tabAlignmentCenter = _tabAlignmentCenter;
 @synthesize startFromSecondTab = _startFromSecondTab;
 @synthesize centerCurrentTab = _centerCurrentTab;
 @synthesize fixFormerTabsPositions = _fixFormerTabsPositions;
 @synthesize fixLatterTabsPositions = _fixLatterTabsPositions;
+@synthesize enableSwipeContentView = _enableSwipeContentView;
 
 #pragma mark - Init
 - (id)initWithCoder:(NSCoder *)aDecoder {
@@ -204,9 +226,8 @@
     
     CGFloat topLayoutGuide = 0.0;
     if (IOS_VERSION_7) {
-        topLayoutGuide = 20.0;
         if (self.navigationController && !self.navigationController.navigationBarHidden) {
-            topLayoutGuide += self.navigationController.navigationBar.frame.size.height;
+            topLayoutGuide += CGRectGetMinY(self.navigationController.navigationBar.frame) + CGRectGetHeight(self.navigationController.navigationBar.frame);
         }
     }
     
@@ -253,8 +274,8 @@
 #pragma mark - Setters
 - (void)setTabHeight:(NSNumber *)tabHeight {
     
-    if ([tabHeight floatValue] < 4.0)
-        tabHeight = [NSNumber numberWithFloat:4.0];
+    if ([tabHeight floatValue] < 0.0)
+        tabHeight = [NSNumber numberWithFloat:0.0];
     else if ([tabHeight floatValue] > CGRectGetHeight(self.view.frame))
         tabHeight = [NSNumber numberWithFloat:CGRectGetHeight(self.view.frame)];
     
@@ -270,10 +291,7 @@
     _tabOffset = tabOffset;
 }
 - (void)setTabWidth:(NSNumber *)tabWidth {
-    
-    if ([tabWidth floatValue] < 4.0)
-        tabWidth = [NSNumber numberWithFloat:4.0];
-    else if ([tabWidth floatValue] > CGRectGetWidth(self.view.frame))
+    if ([tabWidth floatValue] > CGRectGetWidth(self.view.frame))
         tabWidth = [NSNumber numberWithFloat:CGRectGetWidth(self.view.frame)];
     
     _tabWidth = tabWidth;
@@ -284,6 +302,18 @@
         tabLocation = [tabLocation boolValue] ? [NSNumber numberWithBool:YES] : [NSNumber numberWithBool:NO];
     
     _tabLocation = tabLocation;
+}
+- (void)setTabIndicatorLocation:(NSNumber *)tabIndicatorLocation {
+    if ([tabIndicatorLocation floatValue] != 1.0 && [tabIndicatorLocation floatValue] != 0.0)
+        tabIndicatorLocation = [tabIndicatorLocation boolValue] ? [NSNumber numberWithBool:YES] : [NSNumber numberWithBool:NO];
+    
+    _tabIndicatorLocation = tabIndicatorLocation;
+}
+- (void)setTabAlignmentCenter:(NSNumber *)tabAlignmentCenter {
+    if ([tabAlignmentCenter floatValue] != 1.0 && [tabAlignmentCenter floatValue] != 0.0)
+        tabAlignmentCenter = [tabAlignmentCenter boolValue] ? [NSNumber numberWithBool:YES] : [NSNumber numberWithBool:NO];
+    
+    _tabAlignmentCenter = tabAlignmentCenter;
 }
 - (void)setStartFromSecondTab:(NSNumber *)startFromSecondTab {
     
@@ -312,6 +342,13 @@
         fixLatterTabsPositions = [fixLatterTabsPositions boolValue] ? [NSNumber numberWithBool:YES] : [NSNumber numberWithBool:NO];
     
     _fixLatterTabsPositions = fixLatterTabsPositions;
+}
+- (void)setEnableSwipeContentView:(NSNumber *)enableSwipeContentView {
+    
+    if ([enableSwipeContentView floatValue] != 1.0 && [enableSwipeContentView floatValue] != 0.0)
+        enableSwipeContentView = [enableSwipeContentView boolValue] ? [NSNumber numberWithBool:YES] : [NSNumber numberWithBool:NO];
+    
+    _enableSwipeContentView = enableSwipeContentView;
 }
 
 - (void)setActiveTabIndex:(NSUInteger)activeTabIndex {
@@ -439,8 +476,8 @@
     
     if (!_tabHeight) {
         CGFloat value = kTabHeight;
-        if ([self.delegate respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
-            value = [self.delegate viewPager:self valueForOption:ViewPagerOptionTabHeight withDefault:value];
+        if ([self.dataSource respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
+            value = [self.dataSource viewPager:self valueForOption:ViewPagerOptionTabHeight withDefault:value];
         self.tabHeight = [NSNumber numberWithFloat:value];
     }
     return _tabHeight;
@@ -449,8 +486,8 @@
     
     if (!_tabOffset) {
         CGFloat value = kTabOffset;
-        if ([self.delegate respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
-            value = [self.delegate viewPager:self valueForOption:ViewPagerOptionTabOffset withDefault:value];
+        if ([self.dataSource respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
+            value = [self.dataSource viewPager:self valueForOption:ViewPagerOptionTabOffset withDefault:value];
         self.tabOffset = [NSNumber numberWithFloat:value];
     }
     return _tabOffset;
@@ -459,8 +496,8 @@
     
     if (!_tabWidth) {
         CGFloat value = kTabWidth;
-        if ([self.delegate respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
-            value = [self.delegate viewPager:self valueForOption:ViewPagerOptionTabWidth withDefault:value];
+        if ([self.dataSource respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
+            value = [self.dataSource viewPager:self valueForOption:ViewPagerOptionTabWidth withDefault:value];
         self.tabWidth = [NSNumber numberWithFloat:value];
     }
     return _tabWidth;
@@ -469,18 +506,38 @@
     
     if (!_tabLocation) {
         CGFloat value = kTabLocation;
-        if ([self.delegate respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
-            value = [self.delegate viewPager:self valueForOption:ViewPagerOptionTabLocation withDefault:value];
+        if ([self.dataSource respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
+            value = [self.dataSource viewPager:self valueForOption:ViewPagerOptionTabLocation withDefault:value];
         self.tabLocation = [NSNumber numberWithFloat:value];
     }
     return _tabLocation;
+}
+- (NSNumber *)tabIndicatorLocation {
+    
+    if (!_tabIndicatorLocation) {
+        CGFloat value = kTabIndicatorLocation;
+        if ([self.dataSource respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
+            value = [self.dataSource viewPager:self valueForOption:ViewPagerOptionTabIndicatorLocation withDefault:value];
+        self.tabIndicatorLocation = [NSNumber numberWithFloat:value];
+    }
+    return _tabIndicatorLocation;
+}
+- (NSNumber *)tabAlignmentCenter {
+    
+    if (!_tabAlignmentCenter) {
+        CGFloat value = kTabAlignmentCenter;
+        if ([self.dataSource respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
+            value = [self.dataSource viewPager:self valueForOption:ViewPagerOptionTabAlignmentCenter withDefault:value];
+        self.tabAlignmentCenter = [NSNumber numberWithFloat:value];
+    }
+    return _tabAlignmentCenter;
 }
 - (NSNumber *)startFromSecondTab {
     
     if (!_startFromSecondTab) {
         CGFloat value = kStartFromSecondTab;
-        if ([self.delegate respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
-            value = [self.delegate viewPager:self valueForOption:ViewPagerOptionStartFromSecondTab withDefault:value];
+        if ([self.dataSource respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
+            value = [self.dataSource viewPager:self valueForOption:ViewPagerOptionStartFromSecondTab withDefault:value];
         self.startFromSecondTab = [NSNumber numberWithFloat:value];
     }
     return _startFromSecondTab;
@@ -489,8 +546,8 @@
     
     if (!_centerCurrentTab) {
         CGFloat value = kCenterCurrentTab;
-        if ([self.delegate respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
-            value = [self.delegate viewPager:self valueForOption:ViewPagerOptionCenterCurrentTab withDefault:value];
+        if ([self.dataSource respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
+            value = [self.dataSource viewPager:self valueForOption:ViewPagerOptionCenterCurrentTab withDefault:value];
         self.centerCurrentTab = [NSNumber numberWithFloat:value];
     }
     return _centerCurrentTab;
@@ -499,8 +556,8 @@
     
     if (!_fixFormerTabsPositions) {
         CGFloat value = kFixFormerTabsPositions;
-        if ([self.delegate respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
-            value = [self.delegate viewPager:self valueForOption:ViewPagerOptionFixFormerTabsPositions withDefault:value];
+        if ([self.dataSource respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
+            value = [self.dataSource viewPager:self valueForOption:ViewPagerOptionFixFormerTabsPositions withDefault:value];
         self.fixFormerTabsPositions = [NSNumber numberWithFloat:value];
     }
     return _fixFormerTabsPositions;
@@ -509,19 +566,28 @@
     
     if (!_fixLatterTabsPositions) {
         CGFloat value = kFixLatterTabsPositions;
-        if ([self.delegate respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
-            value = [self.delegate viewPager:self valueForOption:ViewPagerOptionFixLatterTabsPositions withDefault:value];
+        if ([self.dataSource respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
+            value = [self.dataSource viewPager:self valueForOption:ViewPagerOptionFixLatterTabsPositions withDefault:value];
         self.fixLatterTabsPositions = [NSNumber numberWithFloat:value];
     }
     return _fixLatterTabsPositions;
 }
-
+- (NSNumber *)enableSwipeContentView {
+    
+    if (!_enableSwipeContentView) {
+        CGFloat value = kEnableSwipeContentView;
+        if ([self.dataSource respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
+            value = [self.dataSource viewPager:self valueForOption:ViewPagerOptionEnableSwipeContentView withDefault:value];
+        self.enableSwipeContentView = [NSNumber numberWithFloat:value];
+    }
+    return _enableSwipeContentView;
+}
 - (UIColor *)indicatorColor {
     
     if (!_indicatorColor) {
         UIColor *color = kIndicatorColor;
-        if ([self.delegate respondsToSelector:@selector(viewPager:colorForComponent:withDefault:)]) {
-            color = [self.delegate viewPager:self colorForComponent:ViewPagerIndicator withDefault:color];
+        if ([self.dataSource respondsToSelector:@selector(viewPager:colorForComponent:withDefault:)]) {
+            color = [self.dataSource viewPager:self colorForComponent:ViewPagerIndicator withDefault:color];
         }
         self.indicatorColor = color;
     }
@@ -531,8 +597,8 @@
     
     if (!_tabsViewBackgroundColor) {
         UIColor *color = kTabsViewBackgroundColor;
-        if ([self.delegate respondsToSelector:@selector(viewPager:colorForComponent:withDefault:)]) {
-            color = [self.delegate viewPager:self colorForComponent:ViewPagerTabsView withDefault:color];
+        if ([self.dataSource respondsToSelector:@selector(viewPager:colorForComponent:withDefault:)]) {
+            color = [self.dataSource viewPager:self colorForComponent:ViewPagerTabsView withDefault:color];
         }
         self.tabsViewBackgroundColor = color;
     }
@@ -542,8 +608,8 @@
     
     if (!_contentViewBackgroundColor) {
         UIColor *color = kContentViewBackgroundColor;
-        if ([self.delegate respondsToSelector:@selector(viewPager:colorForComponent:withDefault:)]) {
-            color = [self.delegate viewPager:self colorForComponent:ViewPagerContent withDefault:color];
+        if ([self.dataSource respondsToSelector:@selector(viewPager:colorForComponent:withDefault:)]) {
+            color = [self.dataSource viewPager:self colorForComponent:ViewPagerContent withDefault:color];
         }
         self.contentViewBackgroundColor = color;
     }
@@ -560,10 +626,13 @@
     _tabOffset = nil;
     _tabWidth = nil;
     _tabLocation = nil;
+    _tabIndicatorLocation = nil;
+    _tabAlignmentCenter = nil;
     _startFromSecondTab = nil;
     _centerCurrentTab = nil;
     _fixFormerTabsPositions = nil;
     _fixLatterTabsPositions = nil;
+    _enableSwipeContentView = nil;
     
     // Empty all colors
     _indicatorColor = nil;
@@ -602,11 +671,13 @@
     }
     
     // Update these options
-    self.tabWidth = [NSNumber numberWithFloat:[self.delegate viewPager:self valueForOption:ViewPagerOptionTabWidth withDefault:kTabWidth]];
-    self.tabOffset = [NSNumber numberWithFloat:[self.delegate viewPager:self valueForOption:ViewPagerOptionTabOffset withDefault:kTabOffset]];
-    self.centerCurrentTab = [NSNumber numberWithFloat:[self.delegate viewPager:self valueForOption:ViewPagerOptionCenterCurrentTab withDefault:kCenterCurrentTab]];
-    self.fixFormerTabsPositions = [NSNumber numberWithFloat:[self.delegate viewPager:self valueForOption:ViewPagerOptionFixFormerTabsPositions withDefault:kFixFormerTabsPositions]];
-    self.fixLatterTabsPositions = [NSNumber numberWithFloat:[self.delegate viewPager:self valueForOption:ViewPagerOptionFixLatterTabsPositions withDefault:kFixLatterTabsPositions]];
+    self.tabWidth = [NSNumber numberWithFloat:[self.dataSource viewPager:self valueForOption:ViewPagerOptionTabWidth withDefault:kTabWidth]];
+    self.tabOffset = [NSNumber numberWithFloat:[self.dataSource viewPager:self valueForOption:ViewPagerOptionTabOffset withDefault:kTabOffset]];
+    self.tabAlignmentCenter = [NSNumber numberWithFloat:[self.dataSource viewPager:self valueForOption:ViewPagerOptionTabAlignmentCenter withDefault:kTabAlignmentCenter]];
+    self.centerCurrentTab = [NSNumber numberWithFloat:[self.dataSource viewPager:self valueForOption:ViewPagerOptionCenterCurrentTab withDefault:kCenterCurrentTab]];
+    self.fixFormerTabsPositions = [NSNumber numberWithFloat:[self.dataSource viewPager:self valueForOption:ViewPagerOptionFixFormerTabsPositions withDefault:kFixFormerTabsPositions]];
+    self.fixLatterTabsPositions = [NSNumber numberWithFloat:[self.dataSource viewPager:self valueForOption:ViewPagerOptionFixLatterTabsPositions withDefault:kFixLatterTabsPositions]];
+    self.enableSwipeContentView = [NSNumber numberWithFloat:[self.dataSource viewPager:self valueForOption:ViewPagerOptionEnableSwipeContentView withDefault:kEnableSwipeContentView]];
     
     // We should update contentSize property of our tabsView, so we should recalculate it with the new values
     CGFloat contentSizeWidth = 0;
@@ -646,6 +717,31 @@
         }
     }
     
+    // Update enable/disable swipe content view
+    for (UIScrollView *view in self.pageViewController.view.subviews) {
+        if ([view isKindOfClass:[UIScrollView class]]) {
+            view.scrollEnabled = [self.enableSwipeContentView boolValue];
+        }
+    }
+    
+    // set tab view alignment center
+    if ([self.tabAlignmentCenter boolValue]) {
+        CGFloat contentWidth = self.tabCount * [self.tabWidth floatValue];
+        CGFloat xPosition = (CGRectGetWidth(self.tabsView.frame)/2.0f) - (contentWidth/2.0f);
+        
+        if (contentWidth < CGRectGetWidth(self.tabsView.frame)) {
+            for (NSUInteger i = 0; i < self.tabCount; i++) {
+                UIView *tabView = [self tabViewAtIndex:i];
+                
+                CGRect frame = tabView.frame;
+                frame.origin.x = xPosition;
+                tabView.frame = frame;
+                
+                xPosition += CGRectGetWidth(tabView.frame);
+            }
+        }
+    }
+    
     // Update tabsView's contentSize with the new width
     self.tabsView.contentSize = CGSizeMake(contentSizeWidth, [self.tabHeight floatValue]);
     
@@ -665,7 +761,7 @@
     
     // Get indicatorColor and check if it is different from the current one
     // If it is, update it
-    indicatorColor = [self.delegate viewPager:self colorForComponent:ViewPagerIndicator withDefault:kIndicatorColor];
+    indicatorColor = [self.dataSource viewPager:self colorForComponent:ViewPagerIndicator withDefault:kIndicatorColor];
     
     if (![self.indicatorColor isEqualToColor:indicatorColor]) {
         
@@ -680,7 +776,7 @@
     
     // Get tabsViewBackgroundColor and check if it is different from the current one
     // If it is, update it
-    tabsViewBackgroundColor = [self.delegate viewPager:self colorForComponent:ViewPagerTabsView withDefault:kTabsViewBackgroundColor];
+    tabsViewBackgroundColor = [self.dataSource viewPager:self colorForComponent:ViewPagerTabsView withDefault:kTabsViewBackgroundColor];
     
     if (![self.tabsViewBackgroundColor isEqualToColor:tabsViewBackgroundColor]) {
         
@@ -693,7 +789,7 @@
     
     // Get contentViewBackgroundColor and check if it is different from the current one
     // Yeah update it, too
-    contentViewBackgroundColor = [self.delegate viewPager:self colorForComponent:ViewPagerContent withDefault:kContentViewBackgroundColor];
+    contentViewBackgroundColor = [self.dataSource viewPager:self colorForComponent:ViewPagerContent withDefault:kContentViewBackgroundColor];
     
     if (![self.contentViewBackgroundColor isEqualToColor:contentViewBackgroundColor]) {
         
@@ -717,6 +813,10 @@
             return [[self tabWidth] floatValue];
         case ViewPagerOptionTabLocation:
             return [[self tabLocation] floatValue];
+        case ViewPagerOptionTabIndicatorLocation:
+            return [[self tabIndicatorLocation] floatValue];
+        case ViewPagerOptionTabAlignmentCenter:
+            return [[self tabAlignmentCenter] floatValue];
         case ViewPagerOptionStartFromSecondTab:
             return [[self startFromSecondTab] floatValue];
         case ViewPagerOptionCenterCurrentTab:
@@ -860,6 +960,31 @@
         [self.view insertSubview:self.contentView atIndex:0];
     }
     
+    // enable/disable swipe content view
+    for (UIScrollView *view in self.pageViewController.view.subviews) {
+        if ([view isKindOfClass:[UIScrollView class]]) {
+            view.scrollEnabled = [self.enableSwipeContentView boolValue];
+        }
+    }
+    
+    // set tab view alignment center
+    if ([self.tabAlignmentCenter boolValue]) {
+        CGFloat contentWidth = self.tabCount * [self.tabWidth floatValue];
+        CGFloat xPosition = (CGRectGetWidth(self.tabsView.frame)/2.0f) - (contentWidth/2.0f);
+        
+        if (contentWidth < CGRectGetWidth(self.tabsView.frame)) {
+            for (NSUInteger i = 0; i < self.tabCount; i++) {
+                UIView *tabView = [self tabViewAtIndex:i];
+                
+                CGRect frame = tabView.frame;
+                frame.origin.x = xPosition;
+                tabView.frame = frame;
+                
+                xPosition += CGRectGetWidth(tabView.frame);
+            }
+        }
+    }
+    
     // Select starting tab
     NSUInteger index = [self.startFromSecondTab boolValue] ? 1 : 0;
     [self selectTabAtIndex:index];
@@ -885,6 +1010,7 @@
         [tabView addSubview:tabViewContent];
         [tabView setClipsToBounds:YES];
         [tabView setIndicatorColor:self.indicatorColor];
+        [tabView setIndicatorLocation:[self.tabIndicatorLocation boolValue] ? TabViewIndicatorLocationTop : TabViewIndicatorLocationBottom];
         
         tabViewContent.center = tabView.center;
         

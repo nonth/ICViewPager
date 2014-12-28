@@ -15,20 +15,26 @@
  * ViewPagerOptionTabOffset: Tab bar's offset from left, defaults to 56.0
  * ViewPagerOptionTabWidth: Any tab item's width, defaults to 128.0
  * ViewPagerOptionTabLocation: 1.0: Top, 0.0: Bottom, Defaults to Top
+ * ViewPagerOptionTabIndicatorLocation: 1.0: Top, 0.0: Bottom, Defaults to Top
+ * ViewPagerOptionTabAlignmentCenter: 1.0: YES, 0.0: NO, Defaults to NO
  * ViewPagerOptionStartFromSecondTab: 1.0: YES, 0.0: NO, defines if view should appear with the 1st or 2nd tab. Defaults to NO
  * ViewPagerOptionCenterCurrentTab: 1.0: YES, 0.0: NO, defines if tabs should be centered, with the given tabWidth. Defaults to NO
  * ViewPagerOptionFixFormerTabsPositions: 1.0: YES, 0.0: NO, defines if the active tab should be placed margined by the offset amount to the left. Effects only the former tabs. If set 1.0 (YES), first tab will be placed at the same position with the second one, leaving space before itself. Defaults to NO
  * ViewPagerOptionFixLatterTabsPositions: 1.0: YES, 0.0: NO, like ViewPagerOptionFixFormerTabsPositions, but effects the latter tabs, making them leave space after themselves. Defaults to NO
+ * ViewPagerOptionEnableSwipeContentView: 1.0: YES, 0.0: NO, Defaults to YES
  */
 typedef NS_ENUM(NSUInteger, ViewPagerOption) {
     ViewPagerOptionTabHeight,
     ViewPagerOptionTabOffset,
     ViewPagerOptionTabWidth,
     ViewPagerOptionTabLocation,
+    ViewPagerOptionTabIndicatorLocation,
+    ViewPagerOptionTabAlignmentCenter,
     ViewPagerOptionStartFromSecondTab,
     ViewPagerOptionCenterCurrentTab,
     ViewPagerOptionFixFormerTabsPositions,
-    ViewPagerOptionFixLatterTabsPositions
+    ViewPagerOptionFixLatterTabsPositions,
+    ViewPagerOptionEnableSwipeContentView
 };
 
 /**
@@ -136,6 +142,7 @@ typedef NS_ENUM(NSUInteger, ViewPagerComponent) {
 - (UIView *)viewPager:(ViewPagerController *)viewPager viewForTabAtIndex:(NSUInteger)index;
 
 @optional
+
 /**
  * The content for any tab. Return a view controller and ViewPager will use its view to show as content.
  * 
@@ -145,6 +152,7 @@ typedef NS_ENUM(NSUInteger, ViewPagerComponent) {
  * @return A viewController whose view will be shown as content
  */
 - (UIViewController *)viewPager:(ViewPagerController *)viewPager contentViewControllerForTabAtIndex:(NSUInteger)index;
+
 /**
  * The content for any tab. Return a view and ViewPager will use it to show as content.
  *
@@ -155,23 +163,10 @@ typedef NS_ENUM(NSUInteger, ViewPagerComponent) {
  */
 - (UIView *)viewPager:(ViewPagerController *)viewPager contentViewForTabAtIndex:(NSUInteger)index;
 
-@end
-
-#pragma mark delegate
-@protocol ViewPagerDelegate <NSObject>
-
-@optional
-/**
- * delegate object must implement this method if wants to be informed when a tab changes
- *
- * @param viewPager The viewPager that's subject to
- * @param index The index of the active tab
- */
-- (void)viewPager:(ViewPagerController *)viewPager didChangeTabToIndex:(NSUInteger)index;
 /**
  * Every time -reloadData method called, ViewPager will ask its delegate for option values.
  * So you don't have to set options from ViewPager itself.
- * You don't have to provide values for all options. 
+ * You don't have to provide values for all options.
  * Just return the values for the interested options and return the given 'value' parameter for the rest.
  *
  * @param viewPager The viewPager that's subject to
@@ -186,7 +181,7 @@ typedef NS_ENUM(NSUInteger, ViewPagerComponent) {
  * Use this method to customize the look and feel.
  * viewPager will ask its delegate for colors for its components.
  * And if they are provided, it will use them, otherwise it will use default colors.
- * Also not that, colors for tab and content views will change the tabView's and contentView's background 
+ * Also not that, colors for tab and content views will change the tabView's and contentView's background
  * (you should provide these views with a clearColor to see the colors),
  * and indicator will change its own color.
  *
@@ -197,5 +192,19 @@ typedef NS_ENUM(NSUInteger, ViewPagerComponent) {
  * @return A UIColor for the given component
  */
 - (UIColor *)viewPager:(ViewPagerController *)viewPager colorForComponent:(ViewPagerComponent)component withDefault:(UIColor *)color;
+
+@end
+
+#pragma mark delegate
+@protocol ViewPagerDelegate <NSObject>
+
+@optional
+/**
+ * delegate object must implement this method if wants to be informed when a tab changes
+ *
+ * @param viewPager The viewPager that's subject to
+ * @param index The index of the active tab
+ */
+- (void)viewPager:(ViewPagerController *)viewPager didChangeTabToIndex:(NSUInteger)index;
 
 @end
