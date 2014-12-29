@@ -24,6 +24,7 @@
 #define kFixFormerTabsPositions 0.0
 #define kFixLatterTabsPositions 0.0
 #define kEnableSwipeContentView 1.0
+#define kTabYOffset 0.0
 
 #define kIndicatorColor [UIColor colorWithRed:178.0/255.0 green:203.0/255.0 blue:57.0/255.0 alpha:0.75]
 #define kTabsViewBackgroundColor [UIColor colorWithRed:234.0/255.0 green:234.0/255.0 blue:234.0/255.0 alpha:0.75]
@@ -145,6 +146,7 @@ typedef NS_ENUM(NSUInteger, TabViewIndicatorLocation) {
 // Options
 @property (nonatomic) NSNumber *tabHeight;
 @property (nonatomic) NSNumber *tabOffset;
+@property (nonatomic) NSNumber *tabYOffset;
 @property (nonatomic) NSNumber *tabWidth;
 @property (nonatomic) NSNumber *tabLocation;
 @property (nonatomic) NSNumber *tabIndicatorLocation;
@@ -182,6 +184,7 @@ typedef NS_ENUM(NSUInteger, TabViewIndicatorLocation) {
 @synthesize fixFormerTabsPositions = _fixFormerTabsPositions;
 @synthesize fixLatterTabsPositions = _fixLatterTabsPositions;
 @synthesize enableSwipeContentView = _enableSwipeContentView;
+@synthesize tabYOffset = _tabYOffset;
 
 #pragma mark - Init
 - (id)initWithCoder:(NSCoder *)aDecoder {
@@ -233,16 +236,16 @@ typedef NS_ENUM(NSUInteger, TabViewIndicatorLocation) {
     
     CGRect frame = self.tabsView.frame;
     frame.origin.x = 0.0;
-    frame.origin.y = [self.tabLocation boolValue] ? topLayoutGuide : CGRectGetHeight(self.view.frame) - [self.tabHeight floatValue];
+    frame.origin.y = [self.tabYOffset floatValue] + ([self.tabLocation boolValue] ? topLayoutGuide : CGRectGetHeight(self.view.frame) - [self.tabHeight floatValue]);
     frame.size.width = CGRectGetWidth(self.view.frame);
     frame.size.height = [self.tabHeight floatValue];
     self.tabsView.frame = frame;
     
     frame = self.contentView.frame;
     frame.origin.x = 0.0;
-    frame.origin.y = [self.tabLocation boolValue] ? topLayoutGuide + CGRectGetHeight(self.tabsView.frame) : topLayoutGuide;
+    frame.origin.y = [self.tabYOffset floatValue] + ([self.tabLocation boolValue] ? topLayoutGuide + CGRectGetHeight(self.tabsView.frame) : topLayoutGuide);
     frame.size.width = CGRectGetWidth(self.view.frame);
-    frame.size.height = CGRectGetHeight(self.view.frame) - (topLayoutGuide + CGRectGetHeight(self.tabsView.frame)) - (self.tabBarController.tabBar.hidden ? 0 : CGRectGetHeight(self.tabBarController.tabBar.frame));
+    frame.size.height = (CGRectGetHeight(self.view.frame) - (topLayoutGuide + CGRectGetHeight(self.tabsView.frame)) - CGRectGetHeight(self.tabBarController.tabBar.frame)) - [self.tabYOffset floatValue];
     self.contentView.frame = frame;
 }
 
@@ -289,6 +292,15 @@ typedef NS_ENUM(NSUInteger, TabViewIndicatorLocation) {
         tabOffset = [NSNumber numberWithFloat:CGRectGetWidth(self.view.frame) - [self.tabWidth floatValue]];
     
     _tabOffset = tabOffset;
+}
+- (void)setTabYOffset:(NSNumber *)tabYOffset {
+    
+    if ([tabYOffset floatValue] < 0.0)
+        tabYOffset = [NSNumber numberWithFloat:0.0];
+    else if ([tabYOffset floatValue] > CGRectGetHeight(self.view.frame))
+        tabYOffset = [NSNumber numberWithFloat:CGRectGetHeight(self.view.frame)];
+    
+    _tabYOffset = tabYOffset;
 }
 - (void)setTabWidth:(NSNumber *)tabWidth {
     if ([tabWidth floatValue] > CGRectGetWidth(self.view.frame))
@@ -582,6 +594,16 @@ typedef NS_ENUM(NSUInteger, TabViewIndicatorLocation) {
     }
     return _enableSwipeContentView;
 }
+- (NSNumber *)tabYOffset {
+    
+    if (!_tabYOffset) {
+        CGFloat value = kTabYOffset;
+        if ([self.dataSource respondsToSelector:@selector(viewPager:valueForOption:withDefault:)])
+            value = [self.dataSource viewPager:self valueForOption:ViewPagerOptionTabYOffset withDefault:value];
+        self.tabYOffset = [NSNumber numberWithFloat:value];
+    }
+    return _tabYOffset;
+}
 - (UIColor *)indicatorColor {
     
     if (!_indicatorColor) {
@@ -633,6 +655,7 @@ typedef NS_ENUM(NSUInteger, TabViewIndicatorLocation) {
     _fixFormerTabsPositions = nil;
     _fixLatterTabsPositions = nil;
     _enableSwipeContentView = nil;
+    _tabYOffset = nil;
     
     // Empty all colors
     _indicatorColor = nil;
@@ -809,6 +832,8 @@ typedef NS_ENUM(NSUInteger, TabViewIndicatorLocation) {
             return [[self tabHeight] floatValue];
         case ViewPagerOptionTabOffset:
             return [[self tabOffset] floatValue];
+        case ViewPagerOptionTabYOffset:
+            return [[self tabYOffset] floatValue];
         case ViewPagerOptionTabWidth:
             return [[self tabWidth] floatValue];
         case ViewPagerOptionTabLocation:

@@ -126,6 +126,8 @@
             return 0.0;
         case ViewPagerOptionEnableSwipeContentView:
             return 1.0;
+//        case ViewPagerOptionTabYOffset:
+//            return 30.0;
         default:
             return value;
     }

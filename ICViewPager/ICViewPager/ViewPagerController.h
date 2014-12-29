@@ -13,6 +13,7 @@
  * 
  * ViewPagerOptionTabHeight: Tab bar's height, defaults to 44.0
  * ViewPagerOptionTabOffset: Tab bar's offset from left, defaults to 56.0
+ * ViewPagerOptionTabYOffset: Tab bat's Y offset from top, defaults to 0.0
  * ViewPagerOptionTabWidth: Any tab item's width, defaults to 128.0
  * ViewPagerOptionTabLocation: 1.0: Top, 0.0: Bottom, Defaults to Top
  * ViewPagerOptionTabIndicatorLocation: 1.0: Top, 0.0: Bottom, Defaults to Top
@@ -26,6 +27,7 @@
 typedef NS_ENUM(NSUInteger, ViewPagerOption) {
     ViewPagerOptionTabHeight,
     ViewPagerOptionTabOffset,
+    ViewPagerOptionTabYOffset,
     ViewPagerOptionTabWidth,
     ViewPagerOptionTabLocation,
     ViewPagerOptionTabIndicatorLocation,
