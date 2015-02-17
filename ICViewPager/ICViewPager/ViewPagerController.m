@@ -228,11 +228,11 @@ typedef NS_ENUM(NSUInteger, TabViewIndicatorLocation) {
 - (void)layoutSubviews {
     
     CGFloat topLayoutGuide = 0.0;
-    if (IOS_VERSION_7) {
-        if (self.navigationController && !self.navigationController.navigationBarHidden) {
-            topLayoutGuide += CGRectGetMinY(self.navigationController.navigationBar.frame) + CGRectGetHeight(self.navigationController.navigationBar.frame);
-        }
-    }
+//    if (IOS_VERSION_7) {
+//        if (self.navigationController && !self.navigationController.navigationBarHidden) {
+//            topLayoutGuide += CGRectGetMinY(self.navigationController.navigationBar.frame) + CGRectGetHeight(self.navigationController.navigationBar.frame);
+//        }
+//    }
     
     CGRect frame = self.tabsView.frame;
     frame.origin.x = 0.0;
